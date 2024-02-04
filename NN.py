@@ -5,12 +5,14 @@ import re
 from nltk.util import ngrams
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
+
 from keras.models import Sequential
 from keras.layers import Embedding, SimpleRNN, Dense
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.models import load_model
-
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import LearningRateScheduler
 # Download NLTK resources
 nltk.download('punkt')
 nltk.download('wordnet')
@@ -65,7 +67,10 @@ model.add(Embedding(input_dim=total_words, output_dim=150, input_length=max_sequ
 model.add(SimpleRNN(100, return_sequences=True))
 model.add(SimpleRNN(100))
 model.add(Dense(total_words, activation='softmax'))
-model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+def lr_schedule(epoch):
+    return 0.001 * (0.1 ** (epoch // 10))
+model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
+learning_rate_scheduler = LearningRateScheduler(lr_schedule)
 if choice == "t":
     model.fit(X, y, epochs=int(input("Epochs count: ")), verbose=1)
     choiceB = input("Save model?[Y/N]: ").lower()
