@@ -77,7 +77,7 @@ if choice == "l":
     model = load_model(loadfileName)
 
 # Generate a sentence
-outputToken = int(input("Enter tokens to generate: "))
+outputToken = int(input("Enter # of tokens to generate: "))
 while True:
     seed_text = input("USER: ")
     for _ in range(outputToken):
