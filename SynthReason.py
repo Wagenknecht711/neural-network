@@ -1,8 +1,9 @@
 import numpy as np
-
-mem = 25
-output_length = 25
-fileName = "xab"
+import random
+import math
+resource_limit = 50
+output_length = 250
+fileName = "xaa"
 class NeuralNetwork:
     def __init__(self, input_size, hidden_size, output_size):
         # Initialize weights and biases
@@ -10,10 +11,6 @@ class NeuralNetwork:
         self.bias_hidden = np.zeros((1, hidden_size))
         self.weights_hidden_output = np.random.randn(hidden_size, output_size)
         self.bias_output = np.zeros((1, output_size))
-
-    def softmax(self, x):
-        exp_scores = np.exp(x - np.max(x, axis=1, keepdims=True))
-        return exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
 
     def forward(self, X):
         # Forward pass
@@ -49,13 +46,17 @@ class NeuralNetwork:
                 loss = np.mean(-np.sum(y * np.log(self.predicted_output + 1e-8), axis=1))
                 accuracy = self.calculate_accuracy(X, y)
                 print(f'Epoch {epoch}, Loss: {loss}, Accuracy: {accuracy}')
-
+    #eval based on accuracy perhaps?
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
 
     def sigmoid_derivative(self, x):
         return x * (1 - x)
-    
+   
+    def softmax(self, x):
+        exp_scores = np.exp(x - np.max(x, axis=1, keepdims=True))
+        return exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+
     def calculate_accuracy(self, X, y):
         correct_predictions = 0
         total_predictions = X.shape[0]
@@ -67,7 +68,7 @@ class NeuralNetwork:
 
 def build_vocabulary(text_file):
     with open(text_file, 'r') as file:
-        words = file.read().split()
+        words = file.read().split()[:resource_limit]
     vocabulary = {}
     index = 0
     for word in words:
@@ -78,7 +79,7 @@ def build_vocabulary(text_file):
 
 def generate_training_data(text_file, vocabulary):
     with open(text_file, 'r') as file:
-        words = file.read().split()[:mem]
+        words = file.read().split()[:resource_limit]
         
     X_train = []
     y_train = []
