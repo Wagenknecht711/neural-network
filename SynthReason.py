@@ -68,7 +68,7 @@ class NeuralNetwork:
 
 def build_vocabulary(text_file):
     with open(text_file, 'r') as file:
-        words = file.read().split()[:resource_limit]
+        words = file.read().lower().split()
     vocabulary = {}
     index = 0
     for word in words:
@@ -79,7 +79,7 @@ def build_vocabulary(text_file):
 
 def generate_training_data(text_file, vocabulary):
     with open(text_file, 'r') as file:
-        words = file.read().split()[:resource_limit]
+        words = list(set(file.read().lower().split()))[:resource_limit]
         
     X_train = []
     y_train = []
