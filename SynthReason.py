@@ -3,8 +3,6 @@ import numpy as np
 mem = 25
 output_length = 25
 fileName = "xab"
-n = 2  # Change n to the desired size of n-grams
-
 class NeuralNetwork:
     def __init__(self, input_size, hidden_size, output_size):
         # Initialize weights and biases
@@ -67,26 +65,29 @@ class NeuralNetwork:
                 correct_predictions += 1
         return correct_predictions / total_predictions
 
-def build_vocabulary(ngrams):
+def build_vocabulary(text_file):
+    with open(text_file, 'r') as file:
+        words = file.read().split()
     vocabulary = {}
     index = 0
-    for ngram in ngrams:
-        for word in ngram:
-            if word not in vocabulary:
-                vocabulary[word] = index
-                index += 1
+    for word in words:
+        if word not in vocabulary:
+            vocabulary[word] = index
+            index += 1
     return vocabulary
 
-def generate_training_data(ngrams, vocabulary):
+def generate_training_data(text_file, vocabulary):
+    with open(text_file, 'r') as file:
+        words = file.read().split()[:mem]
+        
     X_train = []
     y_train = []
-    for ngram in ngrams:
-        input_ngram = ngram[:-1]
-        output_word = ngram[-1]
+    for i in range(len(words) - 1):
+        input_word = words[i]
+        output_word = words[i+1]
         input_vector = np.zeros(len(vocabulary))
         output_vector = np.zeros(len(vocabulary))
-        for word in input_ngram:
-            input_vector[vocabulary[word]] = 1
+        input_vector[vocabulary[input_word]] = 1
         output_vector[vocabulary[output_word]] = 1
         X_train.append(input_vector)
         y_train.append(output_vector)
@@ -96,44 +97,34 @@ def generate_training_data(ngrams, vocabulary):
 
     return X_train, y_train
 
-# Sample text
-with open(fileName, 'r') as file:
-    text = file.read()
-# Split text into words
-words = text.split()
-# Generate n-grams
-ngrams = [words[i:i+n] for i in range(len(words) - n + 1)]
-# Build vocabulary from n-grams
-vocabulary = build_vocabulary(ngrams)
+# Example usage
+if __name__ == "__main__":
+    # Sample vocabulary
+    vocabulary = build_vocabulary(fileName)
 
-# Generate training data from n-grams
-X_train, y_train = generate_training_data(ngrams[:mem], vocabulary)
+    X_train, y_train = generate_training_data(fileName, vocabulary)
+    # Generate training data from text file
 
-# Initialize and train the neural network
-nn = NeuralNetwork(input_size=len(vocabulary), hidden_size=300, output_size=len(vocabulary))
-nn.train(X_train, y_train, epochs=15, learning_rate=0.1)
-
-# Inference loop
-while True:
-    input_ngram = input("Enter n-gram separated by space:").split()
-    if len(input_ngram) == n - 1 and all(word in vocabulary for word in input_ngram):
-        input_vector = np.zeros(len(vocabulary))
-        for word in input_ngram:
-            input_vector[vocabulary[word]] = 1
-        prediction = nn.forward(input_vector.reshape(1, -1))
-        predicted_word_index = np.argmax(prediction)
-        predicted_word = list(vocabulary.keys())[predicted_word_index]
-        output = predicted_word + " "
-        for _ in range(output_length - 1):
-            input_ngram = input_ngram[1:] + [predicted_word]
+    # Initialize and train the neural network
+    nn = NeuralNetwork(input_size=len(vocabulary), hidden_size=300, output_size=len(vocabulary))
+    nn.train(X_train, y_train, epochs=15, learning_rate=0.1)
+    
+    while(True):
+        # Test prediction
+        input_word = input("Enter word:")
+        if input_word in vocabulary:
             input_vector = np.zeros(len(vocabulary))
-            for word in input_ngram:
-                input_vector[vocabulary[word]] = 1
+            input_vector[vocabulary[input_word]] = 1
             prediction = nn.forward(input_vector.reshape(1, -1))
             predicted_word_index = np.argmax(prediction)
-            predicted_word = list(vocabulary.keys())[predicted_word_index]
-            output += predicted_word + " "
-        print(output)
-    else:
-        print("Invalid input. Please enter a valid n-gram.")
-
+            predicted_word = list(vocabulary.keys())[list(vocabulary.values()).index(predicted_word_index)]
+            output = predicted_word + " "
+            for i in range(output_length):
+                input_word = predicted_word
+                input_vector = np.zeros(len(vocabulary))
+                input_vector[vocabulary[input_word]] = 1
+                prediction = nn.forward(input_vector.reshape(1, -1))
+                predicted_word_index = np.argmax(prediction)
+                predicted_word = list(vocabulary.keys())[list(vocabulary.values()).index(predicted_word_index)]
+                output += predicted_word + " "
+            print(output)
